@@ -4,18 +4,21 @@ from puzzle import OPPOSITE, DIRS
 class DFS:
     def __init__(self):
         self.nodes_expanded = 0
+        self.steps = []
     
     def solve(self,grid):
         return self._dfs(grid,0)
     
     def _dfs(self, grid, index):
-        grid.__str__()
+
         self.nodes_expanded += 1
 
-        if index == grid.rows*grid.cols:
+        if index == grid.rows * grid.cols:
             if grid.is_goal():
+                self.steps.append((grid.deep_copy(), None, "done", None))
                 return grid
             return None
+
         r = index // grid.cols
         c = index % grid.cols
 
@@ -23,18 +26,23 @@ class DFS:
 
         for rot in range(4):
             grid.grid[r][c].rotation = rot
-            # Pruning
-            if grid.partial_valid(r,c):
-                result = self._dfs(grid,index+1)
+
+            self.steps.append((grid.deep_copy(), (r, c), "try", rot))
+
+            if grid.partial_valid(r, c):
+                result = self._dfs(grid, index + 1)
                 if result:
                     return result
+
+        self.steps.append((grid.deep_copy(), (r, c), "backtrack", None))
+
         grid.grid[r][c].rotation = original_rotation
         return None
-
 
 class AStar:
     def __init__(self):
         self.nodes_expanded = 0
+        self.steps = []
     
     def heuristic(self, grid):
         """
@@ -121,8 +129,12 @@ class AStar:
         while open_set:
             f_score, g_score, _, current = heapq.heappop(open_set)
             
-            # Skip if already visited
+            # Skip if already visited (backtrack)
             if current in visited:
+                # Find the position that was changed to reach this state
+                # We need to track which tile was modified, but since we don't have parent info,
+                # we'll use a generic backtrack step
+                self.steps.append((current.deep_copy(), None, "backtrack", None))
                 continue
             
             visited.add(current)
@@ -130,6 +142,7 @@ class AStar:
             
             # Check if goal
             if current.is_goal():
+                self.steps.append((current.deep_copy(), None, "done", None))
                 return current
             
             # Generate successors
@@ -140,12 +153,17 @@ class AStar:
                         successor = current.deep_copy()
                         successor.grid[r][c].rotation = rot
                         
-                        # Skip if already visited
+                        # Track try step
+                        self.steps.append((successor.deep_copy(), (r, c), "try", rot))
+                        
+                        # Skip if already visited (backtrack)
                         if successor in visited:
+                            self.steps.append((successor.deep_copy(), (r, c), "backtrack", None))
                             continue
                         
-                        # Pruning: check if this rotation is valid
+                        # Pruning: check if this rotation is valid (backtrack if invalid)
                         if not successor.partial_valid(r, c):
+                            self.steps.append((successor.deep_copy(), (r, c), "backtrack", None))
                             continue
                         
                         # Calculate new scores

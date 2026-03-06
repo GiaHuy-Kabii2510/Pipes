@@ -1,6 +1,6 @@
 from puzzle import Tile,Grid
 from search import DFS, AStar
-from ui import visualize_solution
+from ui import replay_steps
 
 def choose_solver():
     while True:
@@ -26,7 +26,7 @@ def choose_input():
         choice = input("Enter choice: ")
 
         if choice == "1":
-            return "inputs/pipes_2x2.txt"
+            return "inputs/pipes_2x2.txt"   
         elif choice == "2":
             return "inputs/pipes_3x3.txt"
         elif choice == "3":
@@ -57,24 +57,18 @@ def puzzle_load(filename):
 def main():
     input_file = choose_input()
     puzzle = puzzle_load(input_file)
-    puzzle.__str__()
+    #puzzle.__str__()
     solver = choose_solver()
     
-    # Ask if user wants visualization
-    print("\nVisualize solution? (y/n): ", end="")
-    visualize = input().strip().lower() == 'y'
-
-    if visualize:
-        visualize_solution(puzzle, solver, solver.__class__.__name__)
+    solution = solver.solve(puzzle)
+    
+    if solution:
+        print("\nSolution found!")
+        solution.__str__()
+        print("Nodes expanded:", solver.nodes_expanded)
+        replay_steps(solver.steps)
     else:
-        solution = solver.solve(puzzle)
-        
-        if solution:
-            print("\nSolution found!")
-            solution.__str__()
-            print("Nodes expanded:", solver.nodes_expanded)
-        else:
-            print("No solution found.")
+        print("No solution found.")
 
 
 if __name__ == "__main__":

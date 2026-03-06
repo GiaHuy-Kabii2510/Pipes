@@ -25,8 +25,11 @@ def benchmark_solver(solver_class, puzzle, puzzle_name):
     """Benchmark a solver on a puzzle."""
     solver = solver_class()
     
+    # Use a deep copy to avoid modifying the original puzzle
+    puzzle_copy = puzzle.deep_copy()
+    
     start_time = time.time()
-    solution = solver.solve(puzzle)
+    solution = solver.solve(puzzle_copy)
     end_time = time.time()
     
     elapsed_time = end_time - start_time
