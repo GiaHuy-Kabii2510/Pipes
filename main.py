@@ -64,7 +64,6 @@ def main():
     
     if solution:
         print("\nSolution found!")
-        solution.__str__()
         print("Nodes expanded:", solver.nodes_expanded)
         replay_steps(solver.steps)
     else:
